@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id                Int                 @id
+  name              String?             @db.VarChar(255)
+  document          String?             @db.VarChar(255)
+  document_type_id  Int
+  clientInstalation ClientInstalation[]
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+
+  documentType DocumentType @relation(fields: [document_type_id], references: [id])
+
+  @@map("clients")
+}
+
+model DocumentType {
+  id     Int      @id @default(autoincrement())
+  name   String?  @unique @db.VarChar(4)
+  Client Client[]
+
+  @@map("document_types")
+}
+
+model ClientInstalation {
+  id                                    Int                        @id
+  client_id                             Int
+  class_id                              Int
+  sub_class_id                          Int
+  client_instalation_tariff_modality_id Int
+  address                               ClientInstalationAddress[]
+
+  client Client @relation(fields: [client_id], references: [id])
+
+  class                           ClientInstalationClass           @relation(fields: [class_id], references: [id])
+  clientInstalationSubClass       ClientInstalationSubClass?       @relation(fields: [sub_class_id], references: [id])
+  clientInstalationTariffModality ClientInstalationTariffModality? @relation(fields: [client_instalation_tariff_modality_id], references: [id])
+
+  @@map("client_instalations")
+}
+
+model ClientInstalationClass {
+  id                Int                 @id @default(autoincrement())
+  name              String?             @unique @db.VarChar(20)
+  ClientInstalation ClientInstalation[]
+
+  @@map("client_instalation_class")
+}
+
+model ClientInstalationSubClass {
+  id                Int                 @id @default(autoincrement())
+  name              String?             @unique @db.VarChar(20)
+  ClientInstalation ClientInstalation[]
+
+  @@map("client_instalation_subclass")
+}
+
+model ClientInstalationTariffModality {
+  id                Int                 @id @default(autoincrement())
+  name              String?             @unique @db.VarChar(20)
+  ClientInstalation ClientInstalation[]
+
+  @@map("client_instalation_tariff_modality")
+}
+
+model ClientInstalationAddress {
+  id                  Int                @id @default(autoincrement())
+  city                String?            @db.VarChar(255)
+  state               String?            @db.VarChar(25)
+  neighborhood        String?            @db.VarChar(255)
+  street              String?            @db.VarChar(255)
+  number              String?            @db.VarChar(4)
+  complement          String?            @db.VarChar(255)
+  ClientInstalation   ClientInstalation? @relation(fields: [clientInstalationId], references: [id])
+  clientInstalationId Int?
+
+  @@map("client_instalation_address")
+}
+
+model Invoices {
+  id Int @id @default(autoincrement())
+}

@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: management_invoices_mysql
+    environment:
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: Le12_vem
+      MYSQL_ROOT_PASSWORD: Le12_vem
+      MYSQL_DATABASE: managementinvoices
+
+    ports:
+      - "3306:3306"
+    networks:
+      - network_app
+  app:
+    build: .
+    volumes:
+      - ./:/app
+      - ./prisma/:/app/prisma
+    ports:
+      - "3000:3000"
+    networks:
+      - network_app
+    depends_on:
+      - db
+    command: >
+      sh -c "npm install &&
+      npx prisma generate &&
+      npx prisma migrate dev --name init &&
+      npx prisma db seed &&
+      npm run dev"
+
+networks:
+  network_app:
+    driver: bridge
