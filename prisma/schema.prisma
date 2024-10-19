@@ -29,9 +29,11 @@ model Client {
 }
 
 model DocumentType {
-  id     Int      @id @default(autoincrement())
-  name   String?  @unique @db.VarChar(4)
-  Client Client[]
+  id         Int      @id @default(autoincrement())
+  name       String?  @unique @db.VarChar(4)
+  Client     Client[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("document_types")
 }
@@ -42,6 +44,8 @@ model ClientInstalation {
   class_id                              Int
   sub_class_id                          Int
   client_instalation_tariff_modality_id Int
+  created_at                            DateTime                   @default(now())
+  updated_at                            DateTime                   @updatedAt
   address                               ClientInstalationAddress[]
 
   client Client @relation(fields: [client_id], references: [id])
@@ -62,8 +66,11 @@ model ClientInstalationClass {
 }
 
 model ClientInstalationSubClass {
-  id                Int                 @id @default(autoincrement())
-  name              String?             @unique @db.VarChar(20)
+  id         Int      @id @default(autoincrement())
+  name       String?  @unique @db.VarChar(20)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
   ClientInstalation ClientInstalation[]
 
   @@map("client_instalation_subclass")
@@ -71,26 +78,104 @@ model ClientInstalationSubClass {
 
 model ClientInstalationTariffModality {
   id                Int                 @id @default(autoincrement())
-  name              String?             @unique @db.VarChar(20)
+  name              String?             @unique @db.VarChar(64)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
   ClientInstalation ClientInstalation[]
 
   @@map("client_instalation_tariff_modality")
 }
 
 model ClientInstalationAddress {
-  id                  Int                @id @default(autoincrement())
-  city                String?            @db.VarChar(255)
-  state               String?            @db.VarChar(25)
-  neighborhood        String?            @db.VarChar(255)
-  street              String?            @db.VarChar(255)
-  number              String?            @db.VarChar(4)
-  complement          String?            @db.VarChar(255)
-  ClientInstalation   ClientInstalation? @relation(fields: [clientInstalationId], references: [id])
-  clientInstalationId Int?
+  id                    Int                @id @default(autoincrement())
+  city                  String?            @db.VarChar(255)
+  state                 String?            @db.VarChar(25)
+  neighborhood          String?            @db.VarChar(255)
+  street                String?            @db.VarChar(255)
+  number                String?            @db.VarChar(4)
+  complement            String?            @db.VarChar(255)
+  client_instalation_id Int?
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  ClientInstalation     ClientInstalation? @relation(fields: [client_instalation_id], references: [id])
 
   @@map("client_instalation_address")
 }
 
-model Invoices {
-  id Int @id @default(autoincrement())
+model Invoice {
+  id                   Int      @id @default(autoincrement())
+  reference            String   @db.VarChar(5)
+  due_date             DateTime
+  value                Decimal  @db.Decimal(10, 2)
+  number_of_days       Int
+  bar_code             String   @db.VarChar(56)
+  current_invoice      String   @db.VarChar(5)
+  next_invoice         String   @db.VarChar(5)
+  previous_invoice     String   @db.VarChar(5)
+  invoice_technical_id Int
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  InvoiceItem                 InvoiceItem[]
+  InvoiceTechnicalInformation InvoiceTechnicalInformation? @relation(fields: [invoice_technical_id], references: [id])
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id                  Int      @id @default(autoincrement())
+  quantity            Int
+  price               Decimal  @db.Decimal(12, 8)
+  value               Decimal  @db.Decimal(10, 2)
+  pis_confins         Decimal? @db.Decimal(10, 2)
+  base_icms           Decimal? @db.Decimal(10, 2)
+  aliq_icms           Decimal? @db.Decimal(10, 2)
+  icms                Decimal? @db.Decimal(10, 2)
+  type_id             Int
+  invoice_id          Int
+  unit_measurement_id Int
+
+  invoice         Invoice         @relation(fields: [invoice_id], references: [id])
+  unitMeasurement UnitMeasurement @relation(fields: [unit_measurement_id], references: [id])
+  type            InvoiceItemType @relation(fields: [type_id], references: [id])
+
+  @@map("invoices_items")
+}
+
+model UnitMeasurement {
+  id          Int           @id @default(autoincrement())
+  InvoiceItem InvoiceItem[]
+
+  @@map("unit_measurement")
+}
+
+model InvoiceItemType {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique @db.VarChar(64)
+  InvoiceItem InvoiceItem[]
+
+  @@map("invoice_item_type")
+}
+
+model InvoiceTechnicalInformation {
+  id                      Int              @id @default(autoincrement())
+  measurement             String           @db.VarChar(16)
+  previous_measurement    Int?
+  current_measurement     Int?
+  multiplication_constant Decimal?         @db.Decimal(10, 2)
+  consumption_in          Decimal?         @db.Decimal(10, 3)
+  Invoice                 Invoice[]
+  measurement_id          Int
+  measurementType         MeasurementType? @relation(fields: [measurement_id], references: [id])
+
+  @@map("invoice_technical_information")
+}
+
+model MeasurementType {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(16)
+
+  InvoiceTechnicalInformation InvoiceTechnicalInformation[]
+
+  @@map("measurement_type")
 }

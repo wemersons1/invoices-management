@@ -15,7 +15,7 @@ ALTER TABLE `client_instalations` ADD COLUMN `client_instalation_tariff_modality
 -- CreateTable
 CREATE TABLE `client_instalation_tariff_modality` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(20) NULL,
+    `name` VARCHAR(64) NULL,
 
     UNIQUE INDEX `client_instalation_tariff_modality_name_key`(`name`),
     PRIMARY KEY (`id`)
